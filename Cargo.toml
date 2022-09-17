@@ -1,0 +1,16 @@
+[package]
+name = "onionpipe"
+version = "0.1.0"
+edition = "2021"
+authors = ["Casey Marshall <git@cmars.tech>"]
+license = "MIT OR Apache-2.0"
+description = "Onion addresses for anything."
+homepage = "https://github.com/cmars/onionpipe-rs/"
+repository = "https://github.com/cmars/onionpipe-rs/"
+documentation = "https://docs.rs/onionpipe"
+readme = "README.md"
+
+[dependencies]
+libtor = "47.8.0+0.4.7.x"
+tokio = { version = "1", features = ["full"] }
+torut = "0.2.1"
