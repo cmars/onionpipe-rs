@@ -1,52 +1,148 @@
-use std::future::Future;
-use std::pin::Pin;
-use std::task::{Context, Poll};
+use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+use std::os::unix::fs::PermissionsExt;
 
-use tokio::net::UnixStream;
+use thiserror::Error;
 
-use libtor::{HiddenServiceVersion, Tor, TorAddress, TorFlag};
-
-use torut::control::UnauthenticatedConn;
-
-struct TorHandle {
-    join_handle: Option<std::thread::JoinHandle<std::result::Result<u8, libtor::Error>>>,
+#[derive(Error, Debug)]
+pub enum PipeError {
+    #[error("timeout connecting to tor control socket")]
+    ConnTimeout,
+    #[error("failed to connect to tor control socket")]
+    Conn(#[from] torut::control::ConnError),
+    #[error("i/o error")]
+    IO(#[from] std::io::Error),
 }
 
-impl TorHandle {
-    fn new(jh: std::thread::JoinHandle<std::result::Result<u8, libtor::Error>>) -> TorHandle {
-        TorHandle {
-            join_handle: Some(jh),
-        }
+type Result<T> = std::result::Result<T, PipeError>;
+
+pub struct OnionPipeBuilder {
+    temp_path: std::path::PathBuf,
+    exports: Vec<Export>,
+    imports: Vec<Import>,
+}
+
+impl OnionPipeBuilder {
+    pub fn temp_path(mut self, temp_path: &str) -> OnionPipeBuilder {
+        self.temp_path = std::path::PathBuf::from(temp_path);
+        self
+    }
+
+    pub fn export(mut self, export: Export) -> OnionPipeBuilder {
+        self.exports.push(export);
+        self
+    }
+
+    pub fn import(mut self, import: Import) -> OnionPipeBuilder {
+        self.imports.push(import);
+        self
+    }
+
+    pub async fn new(self) -> Result<OnionPipe> {
+        let temp_dir = tempfile::tempdir_in(self.temp_path)?;
+        let data_dir = temp_dir.path().join("data");
+        tokio::fs::create_dir(data_dir.as_path()).await?;
+        tokio::fs::set_permissions(data_dir.as_path(), std::fs::Permissions::from_mode(0o700))
+            .await?;
+        let control_sock = data_dir.join("control.sock").to_str().unwrap().into();
+        Ok(OnionPipe {
+            temp_dir: Some(temp_dir),
+            data_dir: data_dir.to_str().unwrap().into(),
+            control_sock: control_sock,
+            exports: self.exports,
+            imports: self.imports,
+        })
     }
 }
 
-impl Future for TorHandle {
-    type Output = std::result::Result<u8, libtor::Error>;
+pub struct OnionPipe {
+    temp_dir: Option<tempfile::TempDir>,
+    data_dir: String,
+    control_sock: String,
+    exports: Vec<Export>,
+    imports: Vec<Import>,
+}
 
-    fn poll(mut self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<Self::Output> {
-        if !self.join_handle.as_ref().unwrap().is_finished() {
-            return Poll::Pending;
+pub struct Export {
+    local_addr: SocketAddr,
+    remote_addr: Option<torut::onion::OnionAddress>,
+    remote_port: u16,
+}
+
+pub struct Import {
+    remote_addr: torut::onion::OnionAddress,
+    remote_port: u16,
+    local_addr: SocketAddr,
+}
+
+impl OnionPipe {
+    pub fn defaults() -> OnionPipeBuilder {
+        OnionPipeBuilder {
+            temp_path: std::env::temp_dir(),
+            exports: vec![],
+            imports: vec![],
         }
-        println!("finished, joining");
-        Poll::Ready(
-            self.join_handle
-                .take()
-                .unwrap()
-                .join()
-                .expect("failed to join Tor thread"),
+    }
+
+    pub async fn run(&mut self) -> Result<()> {
+        self.start_tor();
+
+        wait_for_file(&self.control_sock).await?;
+        let s = tokio::net::UnixStream::connect(&self.control_sock).await?;
+        let mut utc = torut::control::UnauthenticatedConn::new(s);
+        utc.authenticate(&torut::control::TorAuthData::Null).await?;
+        let mut ac = utc.into_authenticated().await;
+        ac.set_async_event_handler(Some(|_| async move { Ok(()) }));
+        ac.take_ownership().await?;
+
+        let key = torut::onion::TorSecretKeyV3::generate();
+        println!("using onion address: {}", key.public().get_onion_address());
+
+        ac.add_onion_v3(
+            &key,
+            false,
+            false,
+            false,
+            None,
+            &mut [(
+                8000,
+                SocketAddr::new(IpAddr::from(Ipv4Addr::new(127, 0, 0, 1)), 8000),
+            )]
+            .iter(),
         )
+        .await?;
+
+        tokio::signal::ctrl_c().await?;
+        println!("interrupt received, shutting down");
+
+        ac.del_onion(
+            &key.public()
+                .get_onion_address()
+                .get_address_without_dot_onion(),
+        )
+        .await?;
+
+        drop(ac);
+        self.temp_dir.take().unwrap().close()?;
+        Ok(())
+    }
+
+    fn start_tor(&self) -> () {
+        libtor::Tor::new()
+            .flag(libtor::TorFlag::ControlSocket(
+                self.control_sock.as_str().into(),
+            ))
+            .flag(libtor::TorFlag::DataDirectory(
+                self.data_dir.as_str().into(),
+            ))
+            .start_background();
     }
 }
 
-struct Error {
-    kind: ErrorKind,
+#[tokio::main]
+async fn main() {
+    let mut onion_pipe = OnionPipe::defaults().new().await.unwrap();
+    onion_pipe.run().await.unwrap();
 }
-
-enum ErrorKind {
-    ControlPortTimeout,
-}
-
-type Result<T> = std::result::Result<T, Error>;
 
 async fn wait_for_file(path: &str) -> Result<()> {
     for i in 0..10 {
@@ -58,38 +154,5 @@ async fn wait_for_file(path: &str) -> Result<()> {
         }
         tokio::time::sleep(tokio::time::Duration::from_secs(i)).await;
     }
-    Err(Error {
-        kind: ErrorKind::ControlPortTimeout,
-    })
-}
-
-async fn app() -> Result<()> {
-    wait_for_file("/tmp/tor-rust/control.sock").await?;
-    let s = UnixStream::connect("/tmp/tor-rust/control.sock")
-        .await
-        .unwrap();
-    let mut utc = UnauthenticatedConn::new(s);
-    let proto_info = utc.load_protocol_info().await.unwrap();
-    println!("{:?}", proto_info);
-    Ok(())
-}
-
-#[tokio::main]
-async fn main() {
-    let tor_handle = TorHandle::new(
-        Tor::new()
-            .flag(TorFlag::ControlSocket("/tmp/tor-rust/control.sock".into()))
-            .flag(TorFlag::DataDirectory("/tmp/tor-rust".into()))
-            .flag(TorFlag::HiddenServiceDir("/tmp/tor-rust/hs-dir".into()))
-            .flag(TorFlag::HiddenServiceVersion(HiddenServiceVersion::V3))
-            .flag(TorFlag::HiddenServicePort(
-                TorAddress::Port(8000),
-                None.into(),
-            ))
-            .start_background(),
-    );
-
-    tokio::spawn(app());
-    tor_handle.await;
-    std::process::exit(1);
+    Err(PipeError::ConnTimeout)
 }

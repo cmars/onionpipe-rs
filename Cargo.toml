@@ -14,3 +14,5 @@ readme = "README.md"
 libtor = "47.8.0+0.4.7.x"
 tokio = { version = "1", features = ["full"] }
 torut = "0.2.1"
+thiserror = "1.0.35"
+tempfile = "3"
