@@ -11,8 +11,10 @@ documentation = "https://docs.rs/onionpipe"
 readme = "README.md"
 
 [dependencies]
+futures-util = "0.3"
 libtor = "47.8.0+0.4.7.x"
 tokio = { version = "1", features = ["full"] }
 torut = "0.2.1"
 thiserror = "1.0.35"
 tempfile = "3"
+tokio-socks = "0.5.1"

@@ -1,4 +1,5 @@
-use std::{env, fs, io, net, path, result};
+use std::str::FromStr;
+use std::{cell, env, fs, io, net, path, rc, result};
 
 use std::os::unix::fs::PermissionsExt;
 
@@ -14,6 +15,10 @@ pub enum PipeError {
     Conn(#[from] control::ConnError),
     #[error("i/o error")]
     IO(#[from] io::Error),
+    #[error("socks error")]
+    Socks(#[from] tokio_socks::Error),
+    #[error("join error")]
+    Join(#[from] tokio::task::JoinError),
 }
 
 type Result<T> = result::Result<T, PipeError>;
@@ -46,10 +51,12 @@ impl OnionPipeBuilder {
         tokio::fs::create_dir(data_dir.as_path()).await?;
         tokio::fs::set_permissions(data_dir.as_path(), fs::Permissions::from_mode(0o700)).await?;
         let control_sock = data_dir.join("control.sock").to_str().unwrap().into();
+        let socks_sock = data_dir.join("socks.sock").to_str().unwrap().into();
         Ok(OnionPipe {
             temp_dir: Some(temp_dir),
             data_dir: data_dir.to_str().unwrap().into(),
             control_sock: control_sock,
+            socks_sock: socks_sock,
             exports: self.exports,
             imports: self.imports,
         })
@@ -60,6 +67,7 @@ pub struct OnionPipe {
     temp_dir: Option<tempfile::TempDir>,
     data_dir: String,
     control_sock: String,
+    socks_sock: String,
     exports: Vec<Export>,
     imports: Vec<Import>,
 }
@@ -75,6 +83,14 @@ pub struct Import {
     remote_port: u16,
     local_addr: net::SocketAddr,
 }
+
+async fn on_event_noop(
+    _: torut::control::AsyncEvent<'static>,
+) -> result::Result<(), torut::control::ConnError> {
+    Ok(())
+}
+
+const IMPORT_BUF_LEN: usize = 65536;
 
 impl OnionPipe {
     pub fn defaults() -> OnionPipeBuilder {
@@ -93,10 +109,7 @@ impl OnionPipe {
         let mut utc = control::UnauthenticatedConn::new(s);
         utc.authenticate(&control::TorAuthData::Null).await?;
         let mut ac = utc.into_authenticated().await;
-        ac.set_async_event_handler(Some(|ev| async move {
-            println!("event received: {:?}", ev);
-            Ok(())
-        }));
+        ac.set_async_event_handler(Some(on_event_noop));
         ac.take_ownership().await?;
 
         let mut active_onions = vec![];
@@ -133,6 +146,8 @@ impl OnionPipe {
             );
         }
 
+        self.forward_imports().await?;
+
         tokio::signal::ctrl_c().await?;
         println!("interrupt received, shutting down");
 
@@ -162,6 +177,21 @@ impl OnionPipe {
         Ok(())
     }
 
+    async fn forward_imports(&self) -> Result<()> {
+        for i in 0..self.imports.len() {
+            let import = &self.imports[i];
+            let import_addr = format!("{}:{}", import.remote_addr, import.remote_port);
+            let socks_addr = self.socks_sock.to_string();
+
+            tokio::spawn(run_import(
+                import.local_addr.to_string(),
+                socks_addr,
+                import_addr.to_string(),
+            ));
+        }
+        Ok(())
+    }
+
     fn start_tor(&self) -> () {
         // TODO(long-term): replace with Arti when it supports onions!
         libtor::Tor::new()
@@ -178,15 +208,57 @@ impl OnionPipe {
             ))
             // TODO: SocksPort unix:/path/to/socks.sock ...
             .flag(libtor::TorFlag::Custom(
-                "SocksPort auto OnionTrafficOnly".into(),
+                format!(
+                    "SocksPort unix:{} OnionTrafficOnly",
+                    self.socks_sock.as_str()
+                )
+                .into(),
             ))
             .start_background();
     }
 }
 
+async fn run_import(local_addr: String, socks_addr: String, import_addr: String) -> Result<()> {
+    let local_listener = tokio::net::TcpListener::bind(local_addr).await?;
+    loop {
+        let (local_stream, _) = local_listener.accept().await?;
+        println!("got connection");
+        let proxy_stream = tokio::net::UnixStream::connect(socks_addr.as_str()).await?;
+        let remote_stream =
+            tokio_socks::tcp::Socks5Stream::connect_with_socket(proxy_stream, import_addr.as_str())
+                .await?;
+
+        tokio::spawn(forward_stream(local_stream, remote_stream));
+    }
+}
+
+async fn forward_stream(
+    mut local: tokio::net::TcpStream,
+    mut remote: tokio_socks::tcp::Socks5Stream<tokio::net::UnixStream>,
+) -> Result<()> {
+    let (mut local_read, mut local_write) = local.split();
+    let (mut remote_read, mut remote_write) = remote.split();
+    tokio::select! {
+        _ = async {
+            tokio::io::copy(&mut remote_read, &mut local_write).await?;
+            Ok::<_, PipeError>(())
+        } => {}
+        _ = async {
+            tokio::io::copy(&mut local_read, &mut remote_write).await?;
+            Ok::<_, PipeError>(())
+        } => {}
+        else => {}
+    };
+    Ok(())
+}
+
 #[tokio::main]
 async fn main() {
     // TODO: config / cli parser
+    let pbaddr = torut::onion::OnionAddressV3::from_str(
+        "piratebayo3klnzokct3wt5yyxb2vpebbuyjl7m623iaxmqhsd52coid",
+    )
+    .unwrap();
     let mut onion_pipe = OnionPipe::defaults()
         .export(Export {
             local_addr: net::SocketAddr::new(
@@ -195,6 +267,14 @@ async fn main() {
             ),
             remote_port: 8000,
             remote_key: None,
+        })
+        .import(Import {
+            remote_addr: torut::onion::OnionAddress::V3(pbaddr),
+            remote_port: 80,
+            local_addr: net::SocketAddr::new(
+                net::IpAddr::from(net::Ipv4Addr::new(127, 0, 0, 1)),
+                3000,
+            ),
         })
         .new()
         .await
