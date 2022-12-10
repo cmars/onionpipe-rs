@@ -1,5 +1,4 @@
-use std::str::FromStr;
-use std::{cell, env, fs, io, net, path, rc, result};
+use std::{env, fs, io, net, path, result};
 
 use std::os::unix::fs::PermissionsExt;
 
@@ -21,7 +20,7 @@ pub enum PipeError {
     Join(#[from] tokio::task::JoinError),
 }
 
-type Result<T> = result::Result<T, PipeError>;
+pub type Result<T> = result::Result<T, PipeError>;
 
 pub struct OnionPipeBuilder {
     temp_path: path::PathBuf,
@@ -73,15 +72,15 @@ pub struct OnionPipe {
 }
 
 pub struct Export {
-    local_addr: net::SocketAddr,
-    remote_key: Option<onion::TorSecretKeyV3>,
-    remote_port: u16,
+    pub local_addr: net::SocketAddr,
+    pub remote_key: Option<onion::TorSecretKeyV3>,
+    pub remote_port: u16,
 }
 
 pub struct Import {
-    remote_addr: onion::OnionAddress,
-    remote_port: u16,
-    local_addr: net::SocketAddr,
+    pub remote_addr: onion::OnionAddress,
+    pub remote_port: u16,
+    pub local_addr: net::SocketAddr,
 }
 
 async fn on_event_noop(
@@ -89,8 +88,6 @@ async fn on_event_noop(
 ) -> result::Result<(), torut::control::ConnError> {
     Ok(())
 }
-
-const IMPORT_BUF_LEN: usize = 65536;
 
 impl OnionPipe {
     pub fn defaults() -> OnionPipeBuilder {
@@ -250,36 +247,6 @@ async fn forward_stream(
         else => {}
     };
     Ok(())
-}
-
-#[tokio::main]
-async fn main() {
-    // TODO: config / cli parser
-    let pbaddr = torut::onion::OnionAddressV3::from_str(
-        "piratebayo3klnzokct3wt5yyxb2vpebbuyjl7m623iaxmqhsd52coid",
-    )
-    .unwrap();
-    let mut onion_pipe = OnionPipe::defaults()
-        .export(Export {
-            local_addr: net::SocketAddr::new(
-                net::IpAddr::from(net::Ipv4Addr::new(127, 0, 0, 1)),
-                8000,
-            ),
-            remote_port: 8000,
-            remote_key: None,
-        })
-        .import(Import {
-            remote_addr: torut::onion::OnionAddress::V3(pbaddr),
-            remote_port: 80,
-            local_addr: net::SocketAddr::new(
-                net::IpAddr::from(net::Ipv4Addr::new(127, 0, 0, 1)),
-                3000,
-            ),
-        })
-        .new()
-        .await
-        .unwrap();
-    onion_pipe.run().await.unwrap();
 }
 
 async fn wait_for_file(path: &str) -> Result<()> {

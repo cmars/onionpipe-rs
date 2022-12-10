@@ -10,6 +10,14 @@ repository = "https://github.com/cmars/onionpipe-rs/"
 documentation = "https://docs.rs/onionpipe"
 readme = "README.md"
 
+[lib]
+name = "onionpipe"
+path = "src/lib.rs"
+
+[[bin]]
+name = "onionpipe"
+path = "src/bin/main.rs"
+
 [dependencies]
 futures-util = "0.3"
 libtor = "47.8.0+0.4.7.x"
