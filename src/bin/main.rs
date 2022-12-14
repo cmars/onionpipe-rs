@@ -1,6 +1,7 @@
 use std::net;
 use std::str::FromStr;
 
+use onionpipe::config;
 use onionpipe::{Export, Import, OnionPipe};
 
 #[tokio::main]
