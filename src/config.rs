@@ -20,7 +20,7 @@ pub mod config {
     pub struct Export {
         pub local_addr: String,
         // TODO: custom serde https://users.rust-lang.org/t/serialize-a-vec-u8-to-json-as-base64/57781
-        pub remote_onion: Option<String>,
+        pub remote_onion_secret_key: Option<String>,
         pub remote_port: u16,
     }
 
@@ -28,7 +28,7 @@ pub mod config {
         type Error = onionpipe::PipeError;
 
         fn try_into(self) -> onionpipe::Result<onionpipe::Export> {
-            let remote_key = match self.remote_onion {
+            let remote_key = match self.remote_onion_secret_key {
                 Some(b64str) => {
                     let key_bytes: [u8; 64] = match base64::decode(b64str) {
                         Ok(bytes) => match bytes.try_into() {
@@ -117,7 +117,7 @@ pub mod config {
               "temp_dir": "/tmp/foo",
               "exports": [{
                 "local_addr": "127.0.0.1:4566",
-                "remote_onion": "Av+4BGG30UasqU7IqAMR9E70VF1zrvnDLvD8JP+GeV0CYaGaPe/Vm39YX3KDwQXv3l+eWKQhMEtbTPiNSNwvsg==",
+                "remote_onion_secret_key": "Av+4BGG30UasqU7IqAMR9E70VF1zrvnDLvD8JP+GeV0CYaGaPe/Vm39YX3KDwQXv3l+eWKQhMEtbTPiNSNwvsg==",
                 "remote_port": 4567
               }],
               "imports": [{
@@ -130,7 +130,7 @@ pub mod config {
                 temp_dir: Some("/tmp/foo".to_string()),
                 exports: vec![Export{
                     local_addr: "127.0.0.1:4566".to_string(),
-                    remote_onion: Some("Av+4BGG30UasqU7IqAMR9E70VF1zrvnDLvD8JP+GeV0CYaGaPe/Vm39YX3KDwQXv3l+eWKQhMEtbTPiNSNwvsg==".to_string()),
+                    remote_onion_secret_key: Some("Av+4BGG30UasqU7IqAMR9E70VF1zrvnDLvD8JP+GeV0CYaGaPe/Vm39YX3KDwQXv3l+eWKQhMEtbTPiNSNwvsg==".to_string()),
                     remote_port: 4567,
                 }],
                 imports: vec![Import{
@@ -144,7 +144,7 @@ pub mod config {
         fn try_into_export() {
             let export_config = Export{
                 local_addr: "127.0.0.1:4566".to_string(),
-                remote_onion: Some("Av+4BGG30UasqU7IqAMR9E70VF1zrvnDLvD8JP+GeV0CYaGaPe/Vm39YX3KDwQXv3l+eWKQhMEtbTPiNSNwvsg==".to_string()),
+                remote_onion_secret_key: Some("Av+4BGG30UasqU7IqAMR9E70VF1zrvnDLvD8JP+GeV0CYaGaPe/Vm39YX3KDwQXv3l+eWKQhMEtbTPiNSNwvsg==".to_string()),
                 remote_port: 4567,
             };
             let export: onionpipe::Export = export_config.try_into().unwrap();
@@ -166,7 +166,7 @@ pub mod config {
         fn try_into_export_new_onion() {
             let export_config = Export {
                 local_addr: "127.0.0.1:4566".to_string(),
-                remote_onion: None,
+                remote_onion_secret_key: None,
                 remote_port: 4567,
             };
             let export: onionpipe::Export = export_config.try_into().unwrap();
@@ -189,7 +189,7 @@ pub mod config {
         fn try_into_export_unix() {
             let export_config = Export{
                 local_addr: "unix:/tmp/foo.sock".to_string(),
-                remote_onion: Some("Av+4BGG30UasqU7IqAMR9E70VF1zrvnDLvD8JP+GeV0CYaGaPe/Vm39YX3KDwQXv3l+eWKQhMEtbTPiNSNwvsg==".to_string()),
+                remote_onion_secret_key: Some("Av+4BGG30UasqU7IqAMR9E70VF1zrvnDLvD8JP+GeV0CYaGaPe/Vm39YX3KDwQXv3l+eWKQhMEtbTPiNSNwvsg==".to_string()),
                 remote_port: 4567,
             };
             let result: Result<onionpipe::Export, onionpipe::PipeError> = export_config.try_into();
