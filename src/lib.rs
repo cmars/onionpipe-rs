@@ -1,10 +1,12 @@
 use std::{env, fs, io, net, path, result};
 
 use std::os::unix::fs::PermissionsExt;
-
+use thiserror::Error;
 use torut::{control, onion};
 
-use thiserror::Error;
+pub mod config;
+
+use config::config::Config;
 
 #[derive(Error, Debug)]
 pub enum PipeError {
@@ -18,19 +20,25 @@ pub enum PipeError {
     Socks(#[from] tokio_socks::Error),
     #[error("join error")]
     Join(#[from] tokio::task::JoinError),
+    #[error("invalid socket address")]
+    ParseAddr(#[from] net::AddrParseError),
+    #[error("invalid config")]
+    Config(String),
+    #[error("onion address parse error")]
+    OnionAddr(#[from] torut::onion::OnionAddressParseError),
 }
 
 pub type Result<T> = result::Result<T, PipeError>;
 
 pub struct OnionPipeBuilder {
-    temp_path: path::PathBuf,
+    temp_dir: path::PathBuf,
     exports: Vec<Export>,
     imports: Vec<Import>,
 }
 
 impl OnionPipeBuilder {
-    pub fn temp_path(mut self, temp_path: &str) -> OnionPipeBuilder {
-        self.temp_path = path::PathBuf::from(temp_path);
+    pub fn temp_dir(mut self, temp_dir: &str) -> OnionPipeBuilder {
+        self.temp_dir = path::PathBuf::from(temp_dir);
         self
     }
 
@@ -44,8 +52,29 @@ impl OnionPipeBuilder {
         self
     }
 
+    pub async fn config(mut self, config: Config) -> Result<OnionPipe> {
+        for cfg_export in config.exports {
+            let export = match cfg_export.try_into() {
+                Ok(item) => item,
+                Err(err) => return Err(err),
+            };
+            self.exports.push(export);
+        }
+        for cfg_import in config.imports {
+            let import = match cfg_import.try_into() {
+                Ok(item) => item,
+                Err(err) => return Err(err),
+            };
+            self.imports.push(import);
+        }
+        if let Some(temp_dir) = config.temp_dir {
+            self = self.temp_dir(&temp_dir)
+        }
+        self.new().await
+    }
+
     pub async fn new(self) -> Result<OnionPipe> {
-        let temp_dir = tempfile::tempdir_in(self.temp_path)?;
+        let temp_dir = tempfile::tempdir_in(self.temp_dir)?;
         let data_dir = temp_dir.path().join("data");
         tokio::fs::create_dir(data_dir.as_path()).await?;
         tokio::fs::set_permissions(data_dir.as_path(), fs::Permissions::from_mode(0o700)).await?;
@@ -92,7 +121,7 @@ async fn on_event_noop(
 impl OnionPipe {
     pub fn defaults() -> OnionPipeBuilder {
         OnionPipeBuilder {
-            temp_path: env::temp_dir(),
+            temp_dir: env::temp_dir(),
             exports: vec![],
             imports: vec![],
         }
@@ -203,7 +232,6 @@ impl OnionPipe {
                 libtor::log::LogLevel::Warn,
                 libtor::log::LogDestination::Stderr,
             ))
-            // TODO: SocksPort unix:/path/to/socks.sock ...
             .flag(libtor::TorFlag::Custom(
                 format!(
                     "SocksPort unix:{} OnionTrafficOnly",

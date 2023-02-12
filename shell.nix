@@ -1,7 +1,7 @@
 { pkgs ? import <nixpkgs> { } }:
 pkgs.mkShell {
   nativeBuildInputs = with pkgs.buildPackages; [
-    rustup
+    rustc cargo rustfmt clippy
     automake autoconf269 gnumake gcc libtool
   ];
 
