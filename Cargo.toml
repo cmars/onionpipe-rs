@@ -30,3 +30,4 @@ thiserror = "1.0.35"
 tempfile = "3"
 tokio-socks = "0.5.1"
 regex = "1.7.0"
+clap = { version = "4.1.4", features = ["env", "derive"] }
