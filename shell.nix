@@ -10,6 +10,7 @@ pkgs.mkShell {
   ];
 
   shellHook = ''
+    export PATH=$HOME/.cargo/bin:$PATH
   '';
 }
 
