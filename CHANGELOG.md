@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## v0.2.0 (2023-02-12)
 
+<csr-id-d096a5da2184ec04b1bbc1e02daf5bbc7c92250a/>
+<csr-id-33b49d8f51496150fffae29f8d4ed746c0007f6e/>
+<csr-id-f87b6b5a8b306f374ae9c4ea9a9c93abafb4e7f4/>
+<csr-id-34b147be23f53e1b62bfa2f57301e0e9b86ac48f/>
+<csr-id-dc64dbe89246a1a356a2a33d1fd29cecb9aff314/>
+<csr-id-c9306cb34ecdd39393f65e20b83f13e8f671b66b/>
+<csr-id-09760db9d14cd693b4e0f7f5784f48711ac1849b/>
+<csr-id-ce286536a3833182ac650868d2263f426ef7fcf0/>
+
 ### Chore
 
  - <csr-id-d096a5da2184ec04b1bbc1e02daf5bbc7c92250a/> add local cargo bin to $PATH
@@ -23,27 +32,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - <csr-id-ce286536a3833182ac650868d2263f426ef7fcf0/> initial commit
    Early proof of concept
 
+### Chore
+
+ - <csr-id-f85ff121415d0e482447d398b70a86fcac7b7f8a/> add changelog
+
 ### New Features
+
+<csr-id-47c9f702b93b6a582bfbd9cb15190b13c86a71f0/>
+<csr-id-2062d9a439e45d7ca8cf7e4c38ede9215a794059/>
 
  - <csr-id-52b4077cf2a4532d3eeadfcd32ac2e97f14c5872/> cli
    Drive-by fixes:
    - Fix import forwarding loop, should continue, not return on connection
-     error
-   - Fix import remote addr parsing
-   
-   Drive-by chores:
-   - Improve wrapped error text
-   - Leaving room for error backtraces
-   - stderr output, needs to be replaced with proper logging though
- - <csr-id-47c9f702b93b6a582bfbd9cb15190b13c86a71f0/> config file
- - <csr-id-2062d9a439e45d7ca8cf7e4c38ede9215a794059/> implement imports
+   error
+- Fix import remote addr parsing
+- Improve wrapped error text
+- Leaving room for error backtraces
+- stderr output, needs to be replaced with proper logging though
 
 ### Commit Statistics
 
 <csr-read-only-do-not-edit/>
 
- - 13 commits contributed to the release over the course of 148 calendar days.
- - 11 commits were understood as [conventional](https://www.conventionalcommits.org).
+ - 15 commits contributed to the release over the course of 148 calendar days.
+ - 12 commits were understood as [conventional](https://www.conventionalcommits.org).
  - 0 issues like '(#ID)' were seen in commit messages
 
 ### Commit Details
@@ -53,6 +65,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <details><summary>view details</summary>
 
  * **Uncategorized**
+    - add changelog ([`f85ff12`](https://github.com/cmars/onionpipe-rs/commit/f85ff121415d0e482447d398b70a86fcac7b7f8a))
+    - Release onionpipe v0.2.0 ([`2b677d3`](https://github.com/cmars/onionpipe-rs/commit/2b677d3c7d00143c83a55f8e5c1328562e6667ae))
     - add local cargo bin to $PATH ([`d096a5d`](https://github.com/cmars/onionpipe-rs/commit/d096a5da2184ec04b1bbc1e02daf5bbc7c92250a))
     - Merge pull request #3 from cmars/feat/cli ([`5dc3f04`](https://github.com/cmars/onionpipe-rs/commit/5dc3f04522c952826a08b5045241b3d20cbc8230))
     - cli ([`52b4077`](https://github.com/cmars/onionpipe-rs/commit/52b4077cf2a4532d3eeadfcd32ac2e97f14c5872))
@@ -67,4 +81,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - structuring into types, annotate errors ([`09760db`](https://github.com/cmars/onionpipe-rs/commit/09760db9d14cd693b4e0f7f5784f48711ac1849b))
     - initial commit ([`ce28653`](https://github.com/cmars/onionpipe-rs/commit/ce286536a3833182ac650868d2263f426ef7fcf0))
 </details>
+
+<csr-unknown>
+Drive-by chores: config file implement imports<csr-unknown/>
 
