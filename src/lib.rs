@@ -6,7 +6,7 @@ use torut::{control, onion};
 
 pub mod config;
 
-use config::config::Config;
+pub use config::config::Config;
 
 #[derive(Error, Debug)]
 pub enum PipeError {
@@ -14,17 +14,23 @@ pub enum PipeError {
     ConnTimeout,
     #[error("failed to connect to tor control socket")]
     Conn(#[from] control::ConnError),
-    #[error("i/o error")]
-    IO(#[from] io::Error),
-    #[error("socks error")]
+    #[error("i/o error: {0}", .source)]
+    IO {
+        #[from]
+        source: io::Error,
+        //backtrace: std::backtrace::Backtrace,
+    },
+    #[error("socks error: {0}")]
     Socks(#[from] tokio_socks::Error),
-    #[error("join error")]
+    #[error("join error: {0}")]
     Join(#[from] tokio::task::JoinError),
-    #[error("invalid socket address")]
+    #[error("invalid socket address: {0}")]
     ParseAddr(#[from] net::AddrParseError),
-    #[error("invalid config")]
+    #[error("invalid config: {0}")]
     Config(String),
-    #[error("onion address parse error")]
+    #[error("config parse error: {0}")]
+    ConfigParse(#[from] serde_json::Error),
+    #[error("onion address parse error: {0}")]
     OnionAddr(#[from] torut::onion::OnionAddressParseError),
 }
 
@@ -52,7 +58,7 @@ impl OnionPipeBuilder {
         self
     }
 
-    pub async fn config(mut self, config: Config) -> Result<OnionPipe> {
+    pub fn config(mut self, config: Config) -> Result<OnionPipeBuilder> {
         for cfg_export in config.exports {
             let export = match cfg_export.try_into() {
                 Ok(item) => item,
@@ -70,7 +76,7 @@ impl OnionPipeBuilder {
         if let Some(temp_dir) = config.temp_dir {
             self = self.temp_dir(&temp_dir)
         }
-        self.new().await
+        Ok(self)
     }
 
     pub async fn new(self) -> Result<OnionPipe> {
@@ -175,7 +181,7 @@ impl OnionPipe {
         self.forward_imports().await?;
 
         tokio::signal::ctrl_c().await?;
-        println!("interrupt received, shutting down");
+        eprintln!("interrupt received, shutting down");
 
         for i in 0..active_onions.len() {
             match ac.del_onion(active_onions[i].as_str()).await {
@@ -184,10 +190,10 @@ impl OnionPipe {
                         // Control connection may be lost here
                         break;
                     }
-                    println!("failed to delete onion: {:?}", io_err);
+                    eprintln!("failed to delete onion: {:?}", io_err);
                 }
                 Err(err) => {
-                    println!("failed to delete onion: {:?}", err);
+                    eprintln!("failed to delete onion: {:?}", err);
                 }
                 _ => {}
             }
@@ -214,6 +220,8 @@ impl OnionPipe {
                 socks_addr,
                 import_addr.to_string(),
             ));
+
+            println!("forward {} => {}", import_addr, import.local_addr,);
         }
         Ok(())
     }
@@ -248,11 +256,25 @@ async fn run_import(local_addr: String, socks_addr: String, import_addr: String)
     loop {
         let (local_stream, _) = local_listener.accept().await?;
         println!("got connection");
-        let proxy_stream = tokio::net::UnixStream::connect(socks_addr.as_str()).await?;
-        let remote_stream =
-            tokio_socks::tcp::Socks5Stream::connect_with_socket(proxy_stream, import_addr.as_str())
-                .await?;
-
+        let proxy_stream = match tokio::net::UnixStream::connect(socks_addr.as_str()).await {
+            Ok(s) => s,
+            Err(e) => {
+                eprintln!("socks proxy connection failed: {}", e);
+                continue;
+            }
+        };
+        let remote_stream = match tokio_socks::tcp::Socks5Stream::connect_with_socket(
+            proxy_stream,
+            import_addr.as_str(),
+        )
+        .await
+        {
+            Ok(s) => s,
+            Err(e) => {
+                eprintln!("remote onion connection failed: {}", e);
+                continue;
+            }
+        };
         tokio::spawn(forward_stream(local_stream, remote_stream));
     }
 }

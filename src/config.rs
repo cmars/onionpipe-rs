@@ -81,7 +81,7 @@ pub mod config {
     }
 
     fn parse_onion_address(addr: &str) -> onionpipe::Result<(torut::onion::OnionAddressV3, u16)> {
-        let re = Regex::new(r"^(?P<onion>.+)(\.onion)?(:(?P<port>\d+))$")
+        let re = Regex::new(r"^(?P<onion>[^\.]+)(\.onion)?(:(?P<port>\d+))$")
             .map_err(|_| parse_err(addr))?;
         match re.captures(addr) {
             Some(captures) => {
