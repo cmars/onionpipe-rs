@@ -21,9 +21,18 @@ access securely and privately to your own allowlist of authorized keys.
 
 ### What can I do with it right now?
 
-Nothing yet. This is still in development.
+Basic operation with a config file. Try, for example:
+
+    cargo run -- --config examples/config.json
+
+This example forwards a local port 4566 to a remote port 4567 on an ephemeral
+onion address, while simultaneously forwarding a remote Tor project HTTP server
+to local port 8080.
 
 ### What's the plan?
+
+Config file format and API are currently unstable. No compatibility guarantees
+at this time.
 
 - CLI compatibility with the [Go implementation](https://github.com/cmars/onionpipe).
 - Rust library distribution with simplified high-level port-forwarding API
