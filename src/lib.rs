@@ -5,6 +5,7 @@ use thiserror::Error;
 use torut::{control, onion};
 
 pub mod config;
+pub mod parse;
 
 pub use config::config::Config;
 
