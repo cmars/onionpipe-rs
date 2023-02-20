@@ -57,6 +57,27 @@ pub mod config {
         }
     }
 
+    impl FromStr for Export {
+        type Err = String;
+
+        fn from_str(s: &str) -> Result<Self, Self::Err> {
+            let parts: Vec<&str> = s.split(':').collect();
+            if parts.len() != 2 {
+                return Err("Invalid format".to_owned());
+            }
+            let local_addr = parts[0].to_owned();
+            let remote_port = match parts[1].parse::<u16>() {
+                Ok(port) => port,
+                Err(_) => return Err("Invalid port number".to_owned()),
+            };
+            Ok(Export {
+                local_addr,
+                remote_onion_secret_key: None,
+                remote_port,
+            })
+        }
+    }
+
     #[derive(Serialize, Deserialize, PartialEq, Debug)]
     pub struct Import {
         pub remote_addr: String,
