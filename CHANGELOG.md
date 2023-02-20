@@ -5,7 +5,42 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v0.2.2 (2023-02-20)
+
+### Chore
+
+ - <csr-id-959c781bcca5a17d23edc388734f3ec232dfc3aa/> add gh to nix shell
+   gh needed for Github releases
+
+### New Features
+
+ - <csr-id-28c832efe646a3c51d912ce9d2de487491b8065d/> forward expression parser
+   Parse onionpipe forwarding expressions.
+
+### Commit Statistics
+
+<csr-read-only-do-not-edit/>
+
+ - 2 commits contributed to the release.
+ - 7 days passed between releases.
+ - 2 commits were understood as [conventional](https://www.conventionalcommits.org).
+ - 1 unique issue was worked on: [#4](https://github.com/cmars/onionpipe-rs/issues/4)
+
+### Commit Details
+
+<csr-read-only-do-not-edit/>
+
+<details><summary>view details</summary>
+
+ * **[#4](https://github.com/cmars/onionpipe-rs/issues/4)**
+    - forward expression parser ([`28c832e`](https://github.com/cmars/onionpipe-rs/commit/28c832efe646a3c51d912ce9d2de487491b8065d))
+ * **Uncategorized**
+    - add gh to nix shell ([`959c781`](https://github.com/cmars/onionpipe-rs/commit/959c781bcca5a17d23edc388734f3ec232dfc3aa))
+</details>
+
 ## v0.2.1 (2023-02-12)
+
+<csr-id-88be3cb690686fdb5c1d1d76f6b5e06e1431e3d7/>
 
 ### Chore
 
@@ -15,7 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <csr-read-only-do-not-edit/>
 
- - 2 commits contributed to the release.
+ - 3 commits contributed to the release.
  - 1 commit was understood as [conventional](https://www.conventionalcommits.org).
  - 0 issues like '(#ID)' were seen in commit messages
 
@@ -26,6 +61,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <details><summary>view details</summary>
 
  * **Uncategorized**
+    - Release onionpipe v0.2.1 ([`a46e82d`](https://github.com/cmars/onionpipe-rs/commit/a46e82df1ee9ce654dc64d7f00e335aaabbd79aa))
     - Release onionpipe v0.2.0 ([`6c505c9`](https://github.com/cmars/onionpipe-rs/commit/6c505c942cc9890a417f7775caff6a156ba19142))
     - update README ([`88be3cb`](https://github.com/cmars/onionpipe-rs/commit/88be3cb690686fdb5c1d1d76f6b5e06e1431e3d7))
 </details>
