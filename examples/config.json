@@ -1,7 +1,7 @@
 {
   "exports": [{
     "local_addr": "127.0.0.1:4566",
-    "remote_port": 4567
+    "remote_ports": [4567]
   }],
   "imports": [{
     "remote_addr": "2gzyxa5ihm7nsggfxnu52rck2vv4rvmdlkiu3zzui5du4xyclen53wid.onion:80",

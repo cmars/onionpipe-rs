@@ -7,8 +7,6 @@ use torut::{control, onion};
 pub mod config;
 pub mod parse;
 
-pub use config::config::Config;
-
 #[derive(Error, Debug)]
 pub enum PipeError {
     #[error("timeout connecting to tor control socket")]
@@ -31,6 +29,8 @@ pub enum PipeError {
     Config(String),
     #[error("config parse error: {0}")]
     ConfigParse(#[from] serde_json::Error),
+    #[error("forward parse error: {0}")]
+    ForwardParse(#[from] parse::ParseError),
     #[error("onion address parse error: {0}")]
     OnionAddr(#[from] torut::onion::OnionAddressParseError),
 }
@@ -59,22 +59,22 @@ impl OnionPipeBuilder {
         self
     }
 
-    pub fn config(mut self, config: Config) -> Result<OnionPipeBuilder> {
-        for cfg_export in config.exports {
+    pub fn config(mut self, cfg: config::Config) -> Result<OnionPipeBuilder> {
+        for cfg_export in cfg.exports {
             let export = match cfg_export.try_into() {
                 Ok(item) => item,
                 Err(err) => return Err(err),
             };
             self.exports.push(export);
         }
-        for cfg_import in config.imports {
+        for cfg_import in cfg.imports {
             let import = match cfg_import.try_into() {
                 Ok(item) => item,
                 Err(err) => return Err(err),
             };
             self.imports.push(import);
         }
-        if let Some(temp_dir) = config.temp_dir {
+        if let Some(temp_dir) = cfg.temp_dir {
             self = self.temp_dir(&temp_dir)
         }
         Ok(self)
@@ -109,14 +109,20 @@ pub struct OnionPipe {
 
 pub struct Export {
     pub local_addr: net::SocketAddr,
+    // TODO: replace with alias, resolve late, securely
     pub remote_key: Option<onion::TorSecretKeyV3>,
-    pub remote_port: u16,
+    pub remote_ports: Vec<u16>,
 }
 
 pub struct Import {
     pub remote_addr: onion::OnionAddress,
     pub remote_port: u16,
     pub local_addr: net::SocketAddr,
+}
+
+pub enum Forward {
+    Export(Export),
+    Import(Import),
 }
 
 async fn on_event_noop(
@@ -160,7 +166,12 @@ impl OnionPipe {
                 "forward {} => {}:{}",
                 export.local_addr,
                 remote_key.public().get_onion_address(),
-                export.remote_port,
+                export
+                    .remote_ports
+                    .iter()
+                    .map(|port| port.to_string())
+                    .collect::<Vec<_>>()
+                    .join(","),
             );
             ac.add_onion_v3(
                 remote_key,
@@ -168,7 +179,12 @@ impl OnionPipe {
                 false,
                 false,
                 None,
-                &mut [(export.remote_port, export.local_addr)].iter(),
+                &mut export
+                    .remote_ports
+                    .iter()
+                    .map(|port| (port.to_owned(), export.local_addr))
+                    .collect::<Vec<_>>()
+                    .iter(),
             )
             .await?;
             active_onions.push(

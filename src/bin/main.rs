@@ -3,14 +3,16 @@ use std::io::Read;
 
 use clap::Parser;
 
-use onionpipe::{Config, OnionPipe, Result};
+use onionpipe::{config, parse, OnionPipe, Result};
 
 #[derive(Parser)]
 #[command(name = "onionpipe")]
 #[command(bin_name = "onionpipe")]
 struct Cli {
     #[arg(long)]
-    config: std::path::PathBuf,
+    config: Option<std::path::PathBuf>,
+
+    forwards: Vec<String>,
 }
 
 #[tokio::main]
@@ -27,13 +29,31 @@ async fn main() {
 }
 
 async fn run(cli: Cli) -> Result<()> {
-    let mut config_file = File::open(cli.config)?;
-    let mut config_json = String::new();
-    config_file.read_to_string(&mut config_json)?;
-    drop(config_file);
+    let mut pipe_builder = OnionPipe::defaults();
+    if let Some(config_path) = cli.config.as_ref() {
+        let mut config_file = File::open(config_path)?;
+        let mut config_json = String::new();
+        config_file.read_to_string(&mut config_json)?;
+        drop(config_file);
 
-    let config: Config = serde_json::from_str(&config_json)?;
-    let mut onion_pipe = OnionPipe::defaults().config(config)?.new().await?;
+        let cfg: config::Config = serde_json::from_str(&config_json)?;
+        pipe_builder = pipe_builder.config(cfg)?;
+    }
+
+    for forward_arg in cli.forwards {
+        let parsed_forward = forward_arg.parse::<parse::Forward>()?;
+        let forward: config::Forward = parsed_forward.into();
+        match forward {
+            config::Forward::Import(import) => {
+                pipe_builder = pipe_builder.import(import.try_into()?);
+            }
+            config::Forward::Export(export) => {
+                pipe_builder = pipe_builder.export(export.try_into()?);
+            }
+        }
+    }
+
+    let mut onion_pipe = pipe_builder.new().await?;
     onion_pipe.run().await?;
     Ok(())
 }
