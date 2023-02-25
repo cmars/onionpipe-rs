@@ -5,7 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v0.3.0 (2023-02-25)
+
+### New Features
+
+ - <csr-id-b5554e040254cd4639b741f3d5b256857c126662/> parse forward expressions from CLI
+   Parse multiple onionpipe-style expressions from command line args.
+
+### Commit Statistics
+
+<csr-read-only-do-not-edit/>
+
+ - 1 commit contributed to the release.
+ - 5 days passed between releases.
+ - 1 commit was understood as [conventional](https://www.conventionalcommits.org).
+ - 1 unique issue was worked on: [#5](https://github.com/cmars/onionpipe-rs/issues/5)
+
+### Commit Details
+
+<csr-read-only-do-not-edit/>
+
+<details><summary>view details</summary>
+
+ * **[#5](https://github.com/cmars/onionpipe-rs/issues/5)**
+    - parse forward expressions from CLI ([`b5554e0`](https://github.com/cmars/onionpipe-rs/commit/b5554e040254cd4639b741f3d5b256857c126662))
+</details>
+
 ## v0.2.2 (2023-02-20)
+
+<csr-id-959c781bcca5a17d23edc388734f3ec232dfc3aa/>
 
 ### Chore
 
@@ -21,7 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <csr-read-only-do-not-edit/>
 
- - 2 commits contributed to the release.
+ - 3 commits contributed to the release.
  - 7 days passed between releases.
  - 2 commits were understood as [conventional](https://www.conventionalcommits.org).
  - 1 unique issue was worked on: [#4](https://github.com/cmars/onionpipe-rs/issues/4)
@@ -35,6 +63,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  * **[#4](https://github.com/cmars/onionpipe-rs/issues/4)**
     - forward expression parser ([`28c832e`](https://github.com/cmars/onionpipe-rs/commit/28c832efe646a3c51d912ce9d2de487491b8065d))
  * **Uncategorized**
+    - Release onionpipe v0.2.2 ([`122cbfa`](https://github.com/cmars/onionpipe-rs/commit/122cbfaa29c83efa5b7aced271fed74bfdfb5184))
     - add gh to nix shell ([`959c781`](https://github.com/cmars/onionpipe-rs/commit/959c781bcca5a17d23edc388734f3ec232dfc3aa))
 </details>
 
