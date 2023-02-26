@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v0.3.1 (2023-02-26)
+
+### Chore
+
+ - <csr-id-fe374c36842ce95366842e3b141a25147b94fd07/> README updates
+   Updating README to reflect state of latest 0.3.0 release
+
+### Commit Statistics
+
+<csr-read-only-do-not-edit/>
+
+ - 1 commit contributed to the release.
+ - 1 commit was understood as [conventional](https://www.conventionalcommits.org).
+ - 1 unique issue was worked on: [#6](https://github.com/cmars/onionpipe-rs/issues/6)
+
+### Commit Details
+
+<csr-read-only-do-not-edit/>
+
+<details><summary>view details</summary>
+
+ * **[#6](https://github.com/cmars/onionpipe-rs/issues/6)**
+    - README updates ([`fe374c3`](https://github.com/cmars/onionpipe-rs/commit/fe374c36842ce95366842e3b141a25147b94fd07))
+</details>
+
 ## v0.3.0 (2023-02-25)
 
 ### New Features
@@ -16,7 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <csr-read-only-do-not-edit/>
 
- - 1 commit contributed to the release.
+ - 2 commits contributed to the release.
  - 5 days passed between releases.
  - 1 commit was understood as [conventional](https://www.conventionalcommits.org).
  - 1 unique issue was worked on: [#5](https://github.com/cmars/onionpipe-rs/issues/5)
@@ -29,6 +54,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
  * **[#5](https://github.com/cmars/onionpipe-rs/issues/5)**
     - parse forward expressions from CLI ([`b5554e0`](https://github.com/cmars/onionpipe-rs/commit/b5554e040254cd4639b741f3d5b256857c126662))
+ * **Uncategorized**
+    - Release onionpipe v0.3.0 ([`bf2c441`](https://github.com/cmars/onionpipe-rs/commit/bf2c441c5a3cc0bfc813ee86abe673f57cc097a2))
 </details>
 
 ## v0.2.2 (2023-02-20)
