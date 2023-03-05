@@ -6,6 +6,7 @@ use torut::{control, onion};
 
 pub mod config;
 pub mod parse;
+pub mod secrets;
 
 #[derive(Error, Debug)]
 pub enum PipeError {
@@ -33,6 +34,8 @@ pub enum PipeError {
     ForwardParse(#[from] parse::ParseError),
     #[error("onion address parse error: {0}")]
     OnionAddr(#[from] torut::onion::OnionAddressParseError),
+    #[error("secrets storage error: {0}")]
+    Secrets(#[from] secrets::SecretsError),
 }
 
 pub type Result<T> = result::Result<T, PipeError>;
@@ -94,6 +97,7 @@ impl OnionPipeBuilder {
             socks_sock: socks_sock,
             exports: self.exports,
             imports: self.imports,
+            secrets: Default::default(),
         })
     }
 }
@@ -105,12 +109,12 @@ pub struct OnionPipe {
     socks_sock: String,
     exports: Vec<Export>,
     imports: Vec<Import>,
+    secrets: secrets::SecretKeyStorage,
 }
 
 pub struct Export {
     pub local_addr: net::SocketAddr,
-    // TODO: replace with alias, resolve late, securely
-    pub remote_key: Option<onion::TorSecretKeyV3>,
+    pub remote_onion_alias: Option<String>,
     pub remote_ports: Vec<u16>,
 }
 
@@ -154,13 +158,9 @@ impl OnionPipe {
         let mut active_onions = vec![];
         for i in 0..self.exports.len() {
             let export = &self.exports[i];
-            let ephemeral_key = match export.remote_key {
-                Some(ref _remote_key) => None,
-                None => Some(onion::TorSecretKeyV3::generate()),
-            };
-            let remote_key = match ephemeral_key.as_ref() {
-                Some(key) => key,
-                None => export.remote_key.as_ref().unwrap(),
+            let remote_key = match export.remote_onion_alias {
+                Some(ref remote_onion_alias) => self.secrets.ensure_key(remote_onion_alias)?,
+                None => onion::TorSecretKeyV3::generate(),
             };
             println!(
                 "forward {} => {}:{}",
@@ -174,7 +174,7 @@ impl OnionPipe {
                     .join(","),
             );
             ac.add_onion_v3(
-                remote_key,
+                &remote_key,
                 false,
                 false,
                 false,
