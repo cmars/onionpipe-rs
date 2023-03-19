@@ -3,7 +3,7 @@ use std::io::Read;
 
 use clap::Parser;
 
-use onionpipe::{config, parse, OnionPipe, Result};
+use onionpipe::{config, OnionPipe, Result};
 
 #[derive(Parser)]
 #[command(name = "onionpipe")]
@@ -30,28 +30,19 @@ async fn main() {
 
 async fn run(cli: Cli) -> Result<()> {
     let mut pipe_builder = OnionPipe::defaults();
+    let cfg: config::Config;
     if let Some(config_path) = cli.config.as_ref() {
         let mut config_file = File::open(config_path)?;
         let mut config_json = String::new();
         config_file.read_to_string(&mut config_json)?;
         drop(config_file);
 
-        let cfg: config::Config = serde_json::from_str(&config_json)?;
-        pipe_builder = pipe_builder.config(cfg)?;
+        cfg = serde_json::from_str(&config_json)?;
+    } else {
+        cfg = cli.forwards.try_into()?;
     }
 
-    for forward_arg in cli.forwards {
-        let parsed_forward = forward_arg.parse::<parse::Forward>()?;
-        let forward: config::Forward = parsed_forward.into();
-        match forward {
-            config::Forward::Import(import) => {
-                pipe_builder = pipe_builder.import(import.try_into()?);
-            }
-            config::Forward::Export(export) => {
-                pipe_builder = pipe_builder.export(export.try_into()?);
-            }
-        }
-    }
+    pipe_builder = pipe_builder.config(cfg)?;
 
     let mut onion_pipe = pipe_builder.new().await?;
     onion_pipe.run().await?;
