@@ -14,6 +14,27 @@ pub struct Config {
     pub imports: Vec<Import>,
 }
 
+impl TryInto<Config> for Vec<String> {
+    type Error = onionpipe::PipeError;
+
+    fn try_into(self) -> onionpipe::Result<Config> {
+        let mut cfg: Config = Config {
+            temp_dir: None,
+            exports: vec![],
+            imports: vec![],
+        };
+        for forward_expr in self {
+            let parsed_forward = forward_expr.parse::<onionpipe::parse::Forward>()?;
+            let cfg_forward: Forward = parsed_forward.into();
+            match cfg_forward {
+                Forward::Import(import) => cfg.imports.push(import),
+                Forward::Export(export) => cfg.exports.push(export),
+            }
+        }
+        Ok(cfg)
+    }
+}
+
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 pub struct Export {
     pub local_addr: String,
