@@ -63,6 +63,12 @@ Local addresses may be bound. This forwards a specific interface address to an o
 onionpipe 10.0.0.7:8443~443
 ```
 
+### Persistent onion addresses
+
+```
+onionpipe 8000@my-app
+```
+
 ### Import onion services
 
 
@@ -90,7 +96,6 @@ onionpipe --config config.json
 
 - Security review. Rust code review, I'm kind of new to the language.
 - CLI compatibility with the [Go implementation](https://github.com/cmars/onionpipe). What's still missing?
-  - Onion service key management
   - Client authentication & key management
   - More Tor options like anonymous vs fast, bridge support. Vanguard integration.
   - UNIX socket support. Doable but a dependency will need some enhancement (torut)

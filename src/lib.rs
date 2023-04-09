@@ -1,11 +1,14 @@
+use std::str::FromStr;
 use std::{env, fs, io, net, path, result};
 
+use regex::Regex;
 use std::os::unix::fs::PermissionsExt;
 use thiserror::Error;
 use torut::{control, onion};
 
 pub mod config;
 pub mod parse;
+pub mod secrets;
 
 #[derive(Error, Debug)]
 pub enum PipeError {
@@ -29,6 +32,8 @@ pub enum PipeError {
     Config(String),
     #[error("config parse error: {0}")]
     ConfigParse(#[from] serde_json::Error),
+    #[error("secret store error: {0}")]
+    SecretStore(#[from] secrets::SecretsError),
     #[error("forward parse error: {0}")]
     ForwardParse(#[from] parse::ParseError),
     #[error("onion address parse error: {0}")]
@@ -41,11 +46,18 @@ pub struct OnionPipeBuilder {
     temp_dir: path::PathBuf,
     exports: Vec<Export>,
     imports: Vec<Import>,
+    secret_store: Option<secrets::SecretStore>,
 }
 
 impl OnionPipeBuilder {
     pub fn temp_dir(mut self, temp_dir: &str) -> OnionPipeBuilder {
         self.temp_dir = path::PathBuf::from(temp_dir);
+        self
+    }
+
+    pub fn secrets_dir(mut self, secrets_dir: &str) -> OnionPipeBuilder {
+        let secrets_dir = path::PathBuf::from(secrets_dir);
+        self.secret_store = Some(secrets::SecretStore::new(secrets_dir.to_str().unwrap()));
         self
     }
 
@@ -61,7 +73,7 @@ impl OnionPipeBuilder {
 
     pub fn config(mut self, cfg: config::Config) -> Result<OnionPipeBuilder> {
         for cfg_export in cfg.exports {
-            let export = match cfg_export.try_into() {
+            let export = match (cfg_export, self.secret_store.as_mut()).try_into() {
                 Ok(item) => item,
                 Err(err) => return Err(err),
             };
@@ -109,15 +121,75 @@ pub struct OnionPipe {
 
 pub struct Export {
     pub local_addr: net::SocketAddr,
-    // TODO: replace with alias, resolve late, securely
-    pub remote_key: Option<onion::TorSecretKeyV3>,
+    pub remote_key: onion::TorSecretKeyV3,
     pub remote_ports: Vec<u16>,
+}
+
+impl TryInto<Export> for (config::Export, Option<&mut secrets::SecretStore>) {
+    type Error = PipeError;
+
+    fn try_into(self) -> Result<Export> {
+        let remote_key = match (self.0.service_name, self.1) {
+            (Some(ref service_name), Some(secret_store)) => {
+                let key_bytes = secret_store.ensure_service(service_name)?;
+                torut::onion::TorSecretKeyV3::from(key_bytes)
+            }
+            (Some(_), None) => {
+                return Err(PipeError::Config("secret store not configured".to_string()))
+            }
+            (None, _) => torut::onion::TorSecretKeyV3::generate(),
+        };
+        Ok(Export {
+            local_addr: std::net::SocketAddr::from_str(self.0.local_addr.as_str())?,
+            remote_key: remote_key,
+            remote_ports: self.0.remote_ports,
+        })
+    }
 }
 
 pub struct Import {
     pub remote_addr: onion::OnionAddress,
     pub remote_port: u16,
     pub local_addr: net::SocketAddr,
+}
+
+impl TryInto<Import> for config::Import {
+    type Error = PipeError;
+
+    fn try_into(self) -> Result<Import> {
+        let (remote_addr, remote_port) = parse_onion_address(&self.remote_addr)?;
+        Ok(Import {
+            remote_addr: torut::onion::OnionAddress::V3(remote_addr),
+            remote_port: remote_port,
+            local_addr: std::net::SocketAddr::from_str(self.local_addr.as_str())?,
+        })
+    }
+}
+
+fn parse_err(addr: &str) -> PipeError {
+    return PipeError::Config(format!("invalid onion address {}", addr).to_string());
+}
+
+fn parse_onion_address(addr: &str) -> Result<(torut::onion::OnionAddressV3, u16)> {
+    let re = Regex::new(r"^(?P<onion>[^\.]+)(\.onion)?(:(?P<port>\d+))$")
+        .map_err(|_| parse_err(addr))?;
+    match re.captures(addr) {
+        Some(captures) => {
+            let (remote_addr, remote_port) = match (captures.name("onion"), captures.name("port")) {
+                (Some(onion), Some(port)) => (
+                    torut::onion::OnionAddressV3::from_str(onion.as_str())?,
+                    port.as_str().parse::<u16>().map_err(|_| parse_err(addr))?,
+                ),
+                (Some(onion), None) => (
+                    torut::onion::OnionAddressV3::from_str(onion.as_str())?,
+                    80u16,
+                ),
+                _ => return Err(parse_err(addr)),
+            };
+            Ok((remote_addr, remote_port))
+        }
+        None => Err(parse_err(addr)),
+    }
 }
 
 pub enum Forward {
@@ -137,6 +209,7 @@ impl OnionPipe {
             temp_dir: env::temp_dir(),
             exports: vec![],
             imports: vec![],
+            secret_store: None,
         }
     }
 
@@ -154,14 +227,7 @@ impl OnionPipe {
         let mut active_onions = vec![];
         for i in 0..self.exports.len() {
             let export = &self.exports[i];
-            let ephemeral_key = match export.remote_key {
-                Some(ref _remote_key) => None,
-                None => Some(onion::TorSecretKeyV3::generate()),
-            };
-            let remote_key = match ephemeral_key.as_ref() {
-                Some(key) => key,
-                None => export.remote_key.as_ref().unwrap(),
-            };
+            let remote_key = &export.remote_key;
             println!(
                 "forward {} => {}:{}",
                 export.local_addr,
@@ -327,4 +393,88 @@ async fn wait_for_file(path: &str) -> Result<()> {
         tokio::time::sleep(tokio::time::Duration::from_secs(i)).await;
     }
     Err(PipeError::ConnTimeout)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn try_into_export() {
+        let export_config = config::Export {
+            local_addr: "127.0.0.1:4566".to_string(),
+            service_name: Some("some_service".to_string()),
+            remote_ports: vec![4567],
+        };
+        let tmp_dir = tempfile::tempdir().unwrap();
+        let secrets_dir = tmp_dir.path().join("secrets");
+        let mut store = secrets::SecretStore::new(secrets_dir.to_str().unwrap());
+
+        let export: Export = (export_config, Some(&mut store)).try_into().unwrap();
+        assert_eq!("127.0.0.1:4566".parse(), Ok(export.local_addr));
+        assert_eq!(
+            export
+                .remote_key
+                .public()
+                .get_onion_address()
+                .get_address_without_dot_onion()
+                .as_str()
+                .len(),
+            "wdz54gdzddxqigr27g5ivc4q3ekfrpmhe45yyb75kzhrkl577yalq7qd".len()
+        );
+        assert_eq!(export.remote_ports, vec![4567]);
+        assert_eq!(store.list_services().unwrap(), vec!["some_service"]);
+
+        // Test that secret store is consistent
+        let export2_config = config::Export {
+            local_addr: "127.0.0.1:4566".to_string(),
+            service_name: Some("some_service".to_string()),
+            remote_ports: vec![4567],
+        };
+        let export2: Export = (export2_config, Some(&mut store)).try_into().unwrap();
+        assert_eq!(export.remote_key, export2.remote_key);
+        assert_eq!(store.list_services().unwrap(), vec!["some_service"]);
+    }
+
+    #[test]
+    fn try_into_export_new_onion() {
+        let export_config = config::Export {
+            local_addr: "127.0.0.1:4566".to_string(),
+            service_name: None,
+            remote_ports: vec![4567],
+        };
+        let tmp_dir = tempfile::tempdir().unwrap();
+        let secrets_dir = tmp_dir.path().join("secrets");
+        let mut store = secrets::SecretStore::new(secrets_dir.to_str().unwrap());
+
+        let export: Export = (export_config, Some(&mut store)).try_into().unwrap();
+        assert_eq!("127.0.0.1:4566".parse(), Ok(export.local_addr));
+        assert_eq!(
+            export
+                .remote_key
+                .public()
+                .get_onion_address()
+                .get_address_without_dot_onion()
+                .as_str()
+                .len(),
+            56
+        );
+        assert_eq!(export.remote_ports, vec![4567]);
+    }
+
+    #[test]
+    fn try_into_export_unix() {
+        let export_config = config::Export {
+            local_addr: "unix:/tmp/foo.sock".to_string(),
+            service_name: None,
+            remote_ports: vec![4567],
+        };
+        let tmp_dir = tempfile::tempdir().unwrap();
+        let secrets_dir = tmp_dir.path().join("secrets");
+        let mut store = secrets::SecretStore::new(secrets_dir.to_str().unwrap());
+
+        let result: Result<Export> = (export_config, Some(&mut store)).try_into();
+        // TODO: Improve torut to support local unix sockets.
+        assert!(matches!(result, Err(PipeError::ParseAddr(_))));
+    }
 }

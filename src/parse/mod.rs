@@ -80,8 +80,11 @@ impl From<ExportForward> for config::Export {
     fn from(export: ExportForward) -> Self {
         config::Export {
             local_addr: format!("{}", export.local),
-            remote_onion_secret_key: None,
-            // TODO: support for onion key mgmt
+            service_name: export
+                .remote
+                .as_ref()
+                .and_then(|r| r.onion_alias.as_ref())
+                .map(|a| a.to_string()),
             remote_ports: match export.remote {
                 Some(remote) => remote.ports,
                 None => vec![80u16],
