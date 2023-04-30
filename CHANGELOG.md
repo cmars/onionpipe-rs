@@ -5,7 +5,42 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v0.3.2 (2023-04-30)
+
+### Chore
+
+ - <csr-id-401c60cf746b727c35e60bdeb29e280f0449ff8e/> derive config from cli expressions
+   Drive onionpipe builder entirely from config, deriving a dynamic config
+   from the CLI if a file is not specified.
+
+### New Features
+
+ - <csr-id-70a15cabbbd8fdbdab8e61da9c36fffaf0d7cead/> secret key store for service and client auth keys
+
+### Commit Statistics
+
+<csr-read-only-do-not-edit/>
+
+ - 2 commits contributed to the release over the course of 42 calendar days.
+ - 62 days passed between releases.
+ - 2 commits were understood as [conventional](https://www.conventionalcommits.org).
+ - 2 unique issues were worked on: [#8](https://github.com/cmars/onionpipe-rs/issues/8), [#9](https://github.com/cmars/onionpipe-rs/issues/9)
+
+### Commit Details
+
+<csr-read-only-do-not-edit/>
+
+<details><summary>view details</summary>
+
+ * **[#8](https://github.com/cmars/onionpipe-rs/issues/8)**
+    - derive config from cli expressions ([`401c60c`](https://github.com/cmars/onionpipe-rs/commit/401c60cf746b727c35e60bdeb29e280f0449ff8e))
+ * **[#9](https://github.com/cmars/onionpipe-rs/issues/9)**
+    - secret key store for service and client auth keys ([`70a15ca`](https://github.com/cmars/onionpipe-rs/commit/70a15cabbbd8fdbdab8e61da9c36fffaf0d7cead))
+</details>
+
 ## v0.3.1 (2023-02-26)
+
+<csr-id-fe374c36842ce95366842e3b141a25147b94fd07/>
 
 ### Chore
 
@@ -16,7 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <csr-read-only-do-not-edit/>
 
- - 1 commit contributed to the release.
+ - 2 commits contributed to the release.
  - 1 commit was understood as [conventional](https://www.conventionalcommits.org).
  - 1 unique issue was worked on: [#6](https://github.com/cmars/onionpipe-rs/issues/6)
 
@@ -28,6 +63,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
  * **[#6](https://github.com/cmars/onionpipe-rs/issues/6)**
     - README updates ([`fe374c3`](https://github.com/cmars/onionpipe-rs/commit/fe374c36842ce95366842e3b141a25147b94fd07))
+ * **Uncategorized**
+    - Release onionpipe v0.3.1 ([`446a55c`](https://github.com/cmars/onionpipe-rs/commit/446a55c57f9e26322fa2d35abd3cad5c7a998e0d))
 </details>
 
 ## v0.3.0 (2023-02-25)
