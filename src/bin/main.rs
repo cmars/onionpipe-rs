@@ -29,7 +29,17 @@ async fn main() {
 }
 
 async fn run(cli: Cli) -> Result<()> {
+    unsafe {
+        libc::umask(0o077);
+    }
+
     let mut pipe_builder = OnionPipe::defaults();
+
+    if let Some(config_dir) = dirs::config_dir() {
+        let secrets_dir = config_dir.join("onionpipe");
+        pipe_builder = pipe_builder.secrets_dir(secrets_dir.to_str().unwrap());
+    }
+
     let cfg: config::Config;
     if let Some(config_path) = cli.config.as_ref() {
         let mut config_file = File::open(config_path)?;

@@ -1,0 +1,11 @@
+{
+  "exports": [{
+    "local_addr": "127.0.0.1:8080",
+    "service_name": "test",
+    "remote_ports": [80]
+  }],
+  "imports": [{
+    "remote_addr": "2gzyxa5ihm7nsggfxnu52rck2vv4rvmdlkiu3zzui5du4xyclen53wid.onion:80",
+    "local_addr": "127.0.0.1:8080"
+  }]
+}
