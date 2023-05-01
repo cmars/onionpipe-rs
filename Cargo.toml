@@ -35,3 +35,6 @@ nom = "7.1.3"
 crypto_box = "0.8.2"
 libc = "0.2.142"
 dirs = "5.0.0"
+
+[patch.crates-io]
+torut = { path = "vendor/torut" }
