@@ -26,6 +26,23 @@ impl SecretStore {
         }
     }
 
+    pub fn get_service(&self, name: &str) -> Result<Option<[u8; 64]>> {
+        let service_dir = path::PathBuf::from(&self.secrets_dir).join(SERVICES_DIR);
+        if !service_dir.exists() {
+            Ok(None)
+        } else {
+            let service_file = service_dir.join(name);
+            if !service_file.exists() {
+                Ok(None)
+            } else {
+                let contents = fs::read(&service_file)?;
+                let mut key = [0; 64];
+                key.copy_from_slice(&contents);
+                Ok(Some(key))
+            }
+        }
+    }
+
     pub fn ensure_service(&mut self, name: &str) -> Result<[u8; 64]> {
         let service_dir = path::PathBuf::from(&self.secrets_dir).join(SERVICES_DIR);
         if !service_dir.exists() {

@@ -28,6 +28,8 @@ pub enum PipeError {
     Join(#[from] tokio::task::JoinError),
     #[error("invalid socket address: {0}")]
     ParseAddr(#[from] net::AddrParseError),
+    #[error("command failed: {0}")]
+    CLI(String),
     #[error("invalid config: {0}")]
     Config(String),
     #[error("config parse error: {0}")]
