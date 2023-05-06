@@ -5,7 +5,51 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v0.4.0 (2023-05-06)
+
+### Chore
+
+ - <csr-id-66945d12d82eae2161ba279dd804e06164d57389/> unlimited checkout depth
+   Trying to fix smart-release action
+ - <csr-id-51e1e408e6601e0a4537d870e0130dd9334f69e9/> checkout with history for smart-release
+
+### Bug Fixes
+
+ - <csr-id-a8e46cd0bef575fd582e9e9f3ad19bc9cb6d66ce/> add release action
+
+### New Features (BREAKING)
+
+ - <csr-id-d62e283fbe28204f72e1cb58666de0e3b82c5f0c/> add service management cli commands
+   Add CLI subcommands for adding (idempotent), listing and deleting
+   service v3 keys.
+
+### Commit Statistics
+
+<csr-read-only-do-not-edit/>
+
+ - 4 commits contributed to the release.
+ - 5 days passed between releases.
+ - 4 commits were understood as [conventional](https://www.conventionalcommits.org).
+ - 2 unique issues were worked on: [#11](https://github.com/cmars/onionpipe-rs/issues/11), [#12](https://github.com/cmars/onionpipe-rs/issues/12)
+
+### Commit Details
+
+<csr-read-only-do-not-edit/>
+
+<details><summary>view details</summary>
+
+ * **[#11](https://github.com/cmars/onionpipe-rs/issues/11)**
+    - Add service management cli commands ([`d62e283`](https://github.com/cmars/onionpipe-rs/commit/d62e283fbe28204f72e1cb58666de0e3b82c5f0c))
+ * **[#12](https://github.com/cmars/onionpipe-rs/issues/12)**
+    - Add release action ([`a8e46cd`](https://github.com/cmars/onionpipe-rs/commit/a8e46cd0bef575fd582e9e9f3ad19bc9cb6d66ce))
+ * **Uncategorized**
+    - Unlimited checkout depth ([`66945d1`](https://github.com/cmars/onionpipe-rs/commit/66945d12d82eae2161ba279dd804e06164d57389))
+    - Checkout with history for smart-release ([`51e1e40`](https://github.com/cmars/onionpipe-rs/commit/51e1e408e6601e0a4537d870e0130dd9334f69e9))
+</details>
+
 ## v0.3.2 (2023-04-30)
+
+<csr-id-401c60cf746b727c35e60bdeb29e280f0449ff8e/>
 
 ### Chore
 
@@ -21,8 +65,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <csr-read-only-do-not-edit/>
 
- - 2 commits contributed to the release over the course of 42 calendar days.
- - 62 days passed between releases.
+ - 3 commits contributed to the release over the course of 42 calendar days.
+ - 63 days passed between releases.
  - 2 commits were understood as [conventional](https://www.conventionalcommits.org).
  - 2 unique issues were worked on: [#8](https://github.com/cmars/onionpipe-rs/issues/8), [#9](https://github.com/cmars/onionpipe-rs/issues/9)
 
@@ -33,9 +77,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <details><summary>view details</summary>
 
  * **[#8](https://github.com/cmars/onionpipe-rs/issues/8)**
-    - derive config from cli expressions ([`401c60c`](https://github.com/cmars/onionpipe-rs/commit/401c60cf746b727c35e60bdeb29e280f0449ff8e))
+    - Derive config from cli expressions ([`401c60c`](https://github.com/cmars/onionpipe-rs/commit/401c60cf746b727c35e60bdeb29e280f0449ff8e))
  * **[#9](https://github.com/cmars/onionpipe-rs/issues/9)**
-    - secret key store for service and client auth keys ([`70a15ca`](https://github.com/cmars/onionpipe-rs/commit/70a15cabbbd8fdbdab8e61da9c36fffaf0d7cead))
+    - Secret key store for service and client auth keys ([`70a15ca`](https://github.com/cmars/onionpipe-rs/commit/70a15cabbbd8fdbdab8e61da9c36fffaf0d7cead))
+ * **Uncategorized**
+    - Release onionpipe v0.3.2 ([`35b428e`](https://github.com/cmars/onionpipe-rs/commit/35b428ec0ded06c18d3439aac7573753730a58e5))
 </details>
 
 ## v0.3.1 (2023-02-26)
@@ -90,7 +136,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <details><summary>view details</summary>
 
  * **[#5](https://github.com/cmars/onionpipe-rs/issues/5)**
-    - parse forward expressions from CLI ([`b5554e0`](https://github.com/cmars/onionpipe-rs/commit/b5554e040254cd4639b741f3d5b256857c126662))
+    - Parse forward expressions from CLI ([`b5554e0`](https://github.com/cmars/onionpipe-rs/commit/b5554e040254cd4639b741f3d5b256857c126662))
  * **Uncategorized**
     - Release onionpipe v0.3.0 ([`bf2c441`](https://github.com/cmars/onionpipe-rs/commit/bf2c441c5a3cc0bfc813ee86abe673f57cc097a2))
 </details>
@@ -125,10 +171,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <details><summary>view details</summary>
 
  * **[#4](https://github.com/cmars/onionpipe-rs/issues/4)**
-    - forward expression parser ([`28c832e`](https://github.com/cmars/onionpipe-rs/commit/28c832efe646a3c51d912ce9d2de487491b8065d))
+    - Forward expression parser ([`28c832e`](https://github.com/cmars/onionpipe-rs/commit/28c832efe646a3c51d912ce9d2de487491b8065d))
  * **Uncategorized**
     - Release onionpipe v0.2.2 ([`122cbfa`](https://github.com/cmars/onionpipe-rs/commit/122cbfaa29c83efa5b7aced271fed74bfdfb5184))
-    - add gh to nix shell ([`959c781`](https://github.com/cmars/onionpipe-rs/commit/959c781bcca5a17d23edc388734f3ec232dfc3aa))
+    - Add gh to nix shell ([`959c781`](https://github.com/cmars/onionpipe-rs/commit/959c781bcca5a17d23edc388734f3ec232dfc3aa))
 </details>
 
 ## v0.2.1 (2023-02-12)
@@ -156,7 +202,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  * **Uncategorized**
     - Release onionpipe v0.2.1 ([`a46e82d`](https://github.com/cmars/onionpipe-rs/commit/a46e82df1ee9ce654dc64d7f00e335aaabbd79aa))
     - Release onionpipe v0.2.0 ([`6c505c9`](https://github.com/cmars/onionpipe-rs/commit/6c505c942cc9890a417f7775caff6a156ba19142))
-    - update README ([`88be3cb`](https://github.com/cmars/onionpipe-rs/commit/88be3cb690686fdb5c1d1d76f6b5e06e1431e3d7))
+    - Update README ([`88be3cb`](https://github.com/cmars/onionpipe-rs/commit/88be3cb690686fdb5c1d1d76f6b5e06e1431e3d7))
 </details>
 
 ## v0.2.0 (2023-02-12)
@@ -222,20 +268,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
  * **Uncategorized**
     - Release onionpipe v0.2.0 ([`4b24e2e`](https://github.com/cmars/onionpipe-rs/commit/4b24e2e1081f69fb4e0e28efce259f3b0b979951))
-    - add changelog ([`f85ff12`](https://github.com/cmars/onionpipe-rs/commit/f85ff121415d0e482447d398b70a86fcac7b7f8a))
+    - Add changelog ([`f85ff12`](https://github.com/cmars/onionpipe-rs/commit/f85ff121415d0e482447d398b70a86fcac7b7f8a))
     - Release onionpipe v0.2.0 ([`2b677d3`](https://github.com/cmars/onionpipe-rs/commit/2b677d3c7d00143c83a55f8e5c1328562e6667ae))
-    - add local cargo bin to $PATH ([`d096a5d`](https://github.com/cmars/onionpipe-rs/commit/d096a5da2184ec04b1bbc1e02daf5bbc7c92250a))
+    - Add local cargo bin to $PATH ([`d096a5d`](https://github.com/cmars/onionpipe-rs/commit/d096a5da2184ec04b1bbc1e02daf5bbc7c92250a))
     - Merge pull request #3 from cmars/feat/cli ([`5dc3f04`](https://github.com/cmars/onionpipe-rs/commit/5dc3f04522c952826a08b5045241b3d20cbc8230))
-    - cli ([`52b4077`](https://github.com/cmars/onionpipe-rs/commit/52b4077cf2a4532d3eeadfcd32ac2e97f14c5872))
-    - github action ([`33b49d8`](https://github.com/cmars/onionpipe-rs/commit/33b49d8f51496150fffae29f8d4ed746c0007f6e))
-    - rename onion secret key field ([`f87b6b5`](https://github.com/cmars/onionpipe-rs/commit/f87b6b5a8b306f374ae9c4ea9a9c93abafb4e7f4))
+    - Cli ([`52b4077`](https://github.com/cmars/onionpipe-rs/commit/52b4077cf2a4532d3eeadfcd32ac2e97f14c5872))
+    - Github action ([`33b49d8`](https://github.com/cmars/onionpipe-rs/commit/33b49d8f51496150fffae29f8d4ed746c0007f6e))
+    - Rename onion secret key field ([`f87b6b5`](https://github.com/cmars/onionpipe-rs/commit/f87b6b5a8b306f374ae9c4ea9a9c93abafb4e7f4))
     - Merge pull request #2 from cmars/feat/config ([`3ccfa64`](https://github.com/cmars/onionpipe-rs/commit/3ccfa64ac746757bc05beff1723d8f6ead367a6f))
-    - config file ([`47c9f70`](https://github.com/cmars/onionpipe-rs/commit/47c9f702b93b6a582bfbd9cb15190b13c86a71f0))
-    - separate library and CLI binary ([`34b147b`](https://github.com/cmars/onionpipe-rs/commit/34b147be23f53e1b62bfa2f57301e0e9b86ac48f))
-    - implement imports ([`2062d9a`](https://github.com/cmars/onionpipe-rs/commit/2062d9a439e45d7ca8cf7e4c38ede9215a794059))
-    - add readme ([`dc64dbe`](https://github.com/cmars/onionpipe-rs/commit/dc64dbe89246a1a356a2a33d1fd29cecb9aff314))
-    - forward given exports, cleanup ([`c9306cb`](https://github.com/cmars/onionpipe-rs/commit/c9306cb34ecdd39393f65e20b83f13e8f671b66b))
-    - structuring into types, annotate errors ([`09760db`](https://github.com/cmars/onionpipe-rs/commit/09760db9d14cd693b4e0f7f5784f48711ac1849b))
-    - initial commit ([`ce28653`](https://github.com/cmars/onionpipe-rs/commit/ce286536a3833182ac650868d2263f426ef7fcf0))
+    - Config file ([`47c9f70`](https://github.com/cmars/onionpipe-rs/commit/47c9f702b93b6a582bfbd9cb15190b13c86a71f0))
+    - Separate library and CLI binary ([`34b147b`](https://github.com/cmars/onionpipe-rs/commit/34b147be23f53e1b62bfa2f57301e0e9b86ac48f))
+    - Implement imports ([`2062d9a`](https://github.com/cmars/onionpipe-rs/commit/2062d9a439e45d7ca8cf7e4c38ede9215a794059))
+    - Add readme ([`dc64dbe`](https://github.com/cmars/onionpipe-rs/commit/dc64dbe89246a1a356a2a33d1fd29cecb9aff314))
+    - Forward given exports, cleanup ([`c9306cb`](https://github.com/cmars/onionpipe-rs/commit/c9306cb34ecdd39393f65e20b83f13e8f671b66b))
+    - Structuring into types, annotate errors ([`09760db`](https://github.com/cmars/onionpipe-rs/commit/09760db9d14cd693b4e0f7f5784f48711ac1849b))
+    - Initial commit ([`ce28653`](https://github.com/cmars/onionpipe-rs/commit/ce286536a3833182ac650868d2263f426ef7fcf0))
 </details>
 
