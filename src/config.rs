@@ -32,14 +32,14 @@ impl TryInto<Config> for Vec<String> {
     }
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub struct Export {
     pub local_addr: String,
     pub service_name: Option<String>,
     pub remote_ports: Vec<u16>,
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub struct Import {
     pub remote_addr: String,
     pub local_addr: String,
