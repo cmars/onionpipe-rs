@@ -74,6 +74,9 @@ impl OnionPipeBuilder {
     }
 
     pub fn config(mut self, cfg: config::Config) -> Result<OnionPipeBuilder> {
+        if let Some(secrets_dir) = cfg.secrets_dir {
+            self = self.secrets_dir(&secrets_dir);
+        }
         for cfg_export in cfg.exports {
             let export = match (cfg_export, self.secret_store.as_mut()).try_into() {
                 Ok(item) => item,
