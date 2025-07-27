@@ -1,3 +1,4 @@
 /target
 .devenv*
 devenv.local.nix
+Cargo.lock
